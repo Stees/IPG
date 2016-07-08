@@ -1,0 +1,98 @@
+#! /usr/bin/env python
+#This code will create a constant temperature isotherm plot. It should be executed in the directory containing all of the loading directories for a specified condition, i.e. temperature.
+import os
+import readline
+import numpy as np
+import math
+import matplotlib.pyplot as plt
+from re import sub
+
+readline.parse_and_bind("tab: complete")
+readline.set_completer_delims(readline.get_completer_delims().replace('-',''))
+
+#identify all directories in the current location save to directories.dat
+os.system('ls -d */ > pressureNames.dat')
+
+#take strings of pressures in pressureNames.dat, and strip the 'mbar' from the values. Then, convert each value to int, and save it in an array. Sorting to be determined later.
+pressuresFile = open('pressureNames.dat','r')
+pressureLines = pressuresFile.readlines()
+pressuresFile.close()
+os.system('rm pressureNames.dat')
+
+#create array for pressures
+pressures = []
+
+#stripping the unwanted characters, saving in an array
+for pressureLine in pressureLines:
+    pressureLineMod = pressureLine.replace('mbar','').replace('/','').replace("\\",'')
+    pressures.append(int(pressureLineMod))
+
+#make the np array
+pressures1 = np.array(sorted(pressures))
+
+#get the locations of the output files
+os.system('find -name "output*" -printf "%h\n" > locations.dat')
+
+#get these locations into this code
+locationsFile = open('locations.dat','r')
+Lines = locationsFile.readlines()
+locationsFile.close()
+os.system('rm locations.dat')
+
+#for each location, navigate to the directory, execute the removal of the desired data, and return to the previous directory.
+for line in Lines:
+    os.system('cd {0} && grep "absolute adsorption" output_* | grep "avg." | tail -n 1 > loading.dat && cd $OLDPWD'.format(line[:-1]))
+
+#the line containing the desired data is now present in a file titled 'loading.dat' in each Nmbar/Output/System_0/ directory. Now, we need to bring the locations of each of these files into python to get the data into the code. They are the same locations as the output files, but we need to get the full path, including the output file. This will be a bit simpler than the previous "find".
+os.system('find -name "loading.dat" > loadingLocations.dat')
+
+#now read in the locations. Then, close and delete the file.
+lLdataFile = open('loadingLocations.dat','r')
+loadingLocations = lLdataFile.readlines()
+lLdataFile.close()
+os.system('rm loadingLocations.dat')
+
+#create an empty array for the loading values
+loading = []
+
+#next, we need to open the file in each location using python. Then, we need to read the line in the file. Next, the file must be closed. Take the temporary data line, split out the desired value, and append it to the array.
+for line in loadingLocations:
+    tempDataFile = open(line[:-1],'r')
+    tempDataLine = tempDataFile.readline()
+    tempDataFile.close()
+    dataBuffer = tempDataLine.split()[8]
+    loading.append(dataBuffer[:-1])
+
+#now the loading array must be converted to a numpy array so it can be plotted.
+loading1 = np.array(sorted(loading))
+
+#remove all loading.dat files
+os.system('find . -name \loading.dat -type f -delete')
+
+
+#determine upper axis limits
+xMax = int(math.ceil(float(max(pressures1))))
+yMax = int(math.ceil(float(max(loading1))))
+
+#get plot title
+plotTitle = raw_input('Enter the desired plot title\n')
+
+#arrays from Llelwyn? Determine reference
+litX = [0.00,0.17,0.35, 0.56, 0.80, 1.04, 1.26, 1.53, 1.79, 2.05, 3.33, 5.19, 6.64, 9.15, 10.78, 12.35, 13.80, 17.00]
+litY = [0.0000, 0.3349, 0.6464, 0.9477, 1.2533, 1.5290, 1.7609, 2.0140, 2.2427, 2.4510, 3.3169, 4.2228, 4.7462, 5.4136, 5.7489, 6.0145, 6.2253, 6.5845]
+
+#convert to np array, then multiply the X values in bar into mbar
+litX1 = 1000*np.array(litX)
+litY1 = np.array(litY)
+
+#finally, we have two numpy arrays that contain the data we need. Make the plot and save it
+plt.plot(pressures1,loading1,label='simulation')
+plt.plot(litX1,litY1,label='experimental')
+plt.ylabel('Loading (mol/kg)')
+plt.xlabel('pressure (mbar)')
+plt.legend(loc=9)
+plt.axis((0,xMax,0,yMax))
+plt.title(plotTitle)
+plt.savefig(plotTitle)
+plt.show()
+
