@@ -6,6 +6,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from re import sub
+import time
 
 readline.parse_and_bind("tab: complete")
 readline.set_completer_delims(readline.get_completer_delims().replace('-',''))
@@ -13,7 +14,7 @@ readline.set_completer_delims(readline.get_completer_delims().replace('-',''))
 #identify all directories in the current location save to directories.dat
 os.system('ls -d */ > pressureNames.dat')
 
-#take strings of pressures in pressureNames.dat, and strip the 'mbar' from the values. Then, convert each value to int, and save it in an array. Sorting to be determined later.
+#take strings of pressures in pressureNames.dat, and strip the 'mbar' from the values. Then, convert each value to int, and save it in an array.
 pressuresFile = open('pressureNames.dat','r')
 pressureLines = pressuresFile.readlines()
 pressuresFile.close()
@@ -69,30 +70,83 @@ loading1 = np.array(sorted(loading))
 #remove all loading.dat files
 os.system('find . -name \loading.dat -type f -delete')
 
+#get the simulation data label from the current directory name
+os.system('printf "%s\n" "${PWD##*/}" > location')
 
+#get the data label out of the file
+tempLabFile = open('location','r')
+dataLabel = tempLabFile.readline()
+tempLabFile.close()
+os.system('rm location')
+
+#determine if a literature data set needs to be plotted
+controller = 0
+while (controller != 1):
+    inputRequiredController = raw_input('\n\nDo data sets from the literature need to be plotted? (y/n)\n')
+    if (inputRequiredController == 'n'):
+        controller = 1
+        totalDataSets = len(numberList)
+    elif (inputRequiredController == 'y'):
+        controller = 1
+        #now display the data file names in th literatureData directory for the user
+        os.system('ls ~/raspa/isotherms/literatureData/ > literatureDataFiles.dat')
+        litDatFile = open('literatureDataFiles.dat','r')
+        litDatLines = litDatFile.readlines()
+        litDatFile.close()
+        os.system('rm literatureDataFiles.dat')
+        print('\nData for the following calculations are available:\n')
+        time.sleep(1)
+        for i, line in enumerate(litDatLines):
+            print('{0}: {1}'.format(i,line))
+        time.sleep(1)
+
+        #now determine which data sets the user would like to include
+        print('\nEnter the numbers corresponding to the calculations you would like to plot, separated by spaces.\n')
+        litNumbers = raw_input('For example: 0 1\n')
+        litNumList = np.unique(np.array([int(s) for s in litNumbers.split() if s.isdigit()]))
+
+    else:
+        time.sleep(2)
+        print('\n\n\nInvalid entry, please try again.\n')
+        time.sleep(1)
+
+dataSetLabels = np.array([])
+
+#bring in the desired literature data
+for dCount, P in enumerate(litNumList):
+    tempPressArray = np.array([])
+    tempLoadingArray = np.array([])
+    dataSetLabels = np.append(dataSetLabels, litDatLines[int(P)][:-1].replace('.xls',''))
+    fileName = os.path.join(os.path.expanduser('~'),'/ihome/kjohnson/jpr54/raspa/isotherms/literatureData/' + litDatLines[int(P)][:-1])
+
+    #read in the data
+    tempFile = open(fileName, 'r')
+    tempLines = tempFile.readlines()
+    tempFile.close()
+
+    #save the first line in the label
+    dataSetLabels = np.append(dataSetLabels, tempLines[0][:-1])
+    for jCount, line in enumerate(tempLines):
+        if (jCount > 0):
+            tempPressArray = np.append(tempPressArray, line.split()[0])
+            tempLoadingArray = np.append(tempLoadingArray, line.split()[1])
+    plt.plot(tempPressArray, tempLoadingArray, label=dataSetLabels[dCount], marker='o', linestyle='none')
+
+    
 #determine upper axis limits
 xMax = int(math.ceil(float(max(pressures1))))
 yMax = int(math.ceil(float(max(loading1))))
 
 #get plot title
-plotTitle = raw_input('Enter the desired plot title\n')
+plotTitle = raw_input('Enter the desired plot title. File extension added automatically.\n')
 
-#arrays from Llelwyn? Determine reference
-litX = [0.00,0.17,0.35, 0.56, 0.80, 1.04, 1.26, 1.53, 1.79, 2.05, 3.33, 5.19, 6.64, 9.15, 10.78, 12.35, 13.80, 17.00]
-litY = [0.0000, 0.3349, 0.6464, 0.9477, 1.2533, 1.5290, 1.7609, 2.0140, 2.2427, 2.4510, 3.3169, 4.2228, 4.7462, 5.4136, 5.7489, 6.0145, 6.2253, 6.5845]
-
-#convert to np array, then multiply the X values in bar into mbar
-litX1 = 1000*np.array(litX)
-litY1 = np.array(litY)
 
 #finally, we have two numpy arrays that contain the data we need. Make the plot and save it
-plt.plot(pressures1,loading1,label='simulation')
-plt.plot(litX1,litY1,label='experimental')
+plt.plot(pressures1,loading1,label=dataLabel)
 plt.ylabel('Loading (mol/kg)')
 plt.xlabel('pressure (mbar)')
-plt.legend(loc=9)
+plt.legend(loc=4)
 plt.axis((0,xMax,0,yMax))
-plt.title(plotTitle)
 plt.savefig(plotTitle)
 plt.show()
 
