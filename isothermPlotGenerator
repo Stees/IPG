@@ -11,6 +11,10 @@ import time
 readline.parse_and_bind("tab: complete")
 readline.set_completer_delims(readline.get_completer_delims().replace('-',''))
 
+#define tick mark font size
+plt.rc('xtick', labelsize=20)
+plt.rc('ytick', labelsize=20)
+
 #identify all directories in the current location save to directories.dat
 os.system('ls -d */ > pressureNames.dat')
 
@@ -112,6 +116,9 @@ while (controller != 1):
 
 dataSetLabels = np.array([])
 
+#define the figure size
+plt.figure(figsize=(12,12))
+
 #bring in the desired literature data
 for dCount, P in enumerate(litNumList):
     tempPressArray = np.array([])
@@ -143,10 +150,12 @@ plotTitle = raw_input('Enter the desired plot title. File extension added automa
 
 #finally, we have two numpy arrays that contain the data we need. Make the plot and save it
 plt.plot(pressures1,loading1,label=dataLabel)
-plt.ylabel('Loading (mol/kg)')
-plt.xlabel('pressure (mbar)')
-plt.legend(loc=4)
+plt.ylabel('Loading (mol/kg)', fontsize=20)
+plt.xlabel('pressure (mbar)', fontsize=20)
+plt.legend(loc=4,prop={'size':18})
 plt.axis((0,xMax,0,yMax))
+plt.rc('xtick', labelsize=20)
+plt.rc('ytick', labelsize=20)
 plt.savefig(plotTitle)
 plt.show()
 
