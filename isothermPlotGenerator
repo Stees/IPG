@@ -12,8 +12,8 @@ readline.parse_and_bind("tab: complete")
 readline.set_completer_delims(readline.get_completer_delims().replace('-',''))
 
 #define tick mark font size
-plt.rc('xtick', labelsize=20)
-plt.rc('ytick', labelsize=20)
+plt.rc('xtick', labelsize=18)
+plt.rc('ytick', labelsize=18)
 
 #identify all directories in the current location save to directories.dat
 os.system('ls -d */ > pressureNames.dat')
@@ -117,7 +117,7 @@ while (controller != 1):
 dataSetLabels = np.array([])
 
 #define the figure size
-plt.figure(figsize=(12,12))
+plt.figure(figsize=(16,9))
 
 #bring in the desired literature data
 for dCount, P in enumerate(litNumList):
@@ -131,13 +131,13 @@ for dCount, P in enumerate(litNumList):
     tempLines = tempFile.readlines()
     tempFile.close()
 
-    #save the first line in the label
+    #save the first line in the label, plot the literature data
     dataSetLabels = np.append(dataSetLabels, tempLines[0][:-1])
     for jCount, line in enumerate(tempLines):
         if (jCount > 0):
             tempPressArray = np.append(tempPressArray, line.split()[0])
             tempLoadingArray = np.append(tempLoadingArray, line.split()[1])
-    plt.plot(tempPressArray, tempLoadingArray, label=dataSetLabels[dCount], marker='o', linestyle='none')
+    plt.plot(tempPressArray, tempLoadingArray, label=dataSetLabels[dCount].rsplit('_',2)[0].replace('_',' ')+' Lit', marker='o', markersize=10, linestyle='none')
 
     
 #determine upper axis limits
@@ -149,9 +149,9 @@ plotTitle = raw_input('Enter the desired plot title. File extension added automa
 
 
 #finally, we have two numpy arrays that contain the data we need. Make the plot and save it
-plt.plot(pressures1,loading1,label=dataLabel)
+plt.plot(pressures1,loading1,label=dataLabel.rsplit('_',3)[0].replace('_',' ')+' Calc', linewidth=2.0)
 plt.ylabel('Loading (mol/kg)', fontsize=20)
-plt.xlabel('pressure (mbar)', fontsize=20)
+plt.xlabel('Pressure (mbar)', fontsize=20)
 plt.legend(loc=4,prop={'size':18})
 plt.axis((0,xMax,0,yMax))
 plt.rc('xtick', labelsize=20)
