@@ -137,7 +137,12 @@ for dCount, P in enumerate(litNumList):
         if (jCount > 0):
             tempPressArray = np.append(tempPressArray, line.split()[0])
             tempLoadingArray = np.append(tempLoadingArray, line.split()[1])
-    plt.plot(tempPressArray, tempLoadingArray, label=dataSetLabels[dCount].rsplit('_',2)[0].replace('_',' ')+' Lit', marker='o', markersize=10, linestyle='none')
+    legendSelection = 0
+   # while (legendSelection != 1):
+        #print('What information do you need to include in the legend? Calculation/literature is added automatically.\n')
+       # legendSelection = int(raw_input('1: MOF name only\n2: MOF name and adsorbate\n3:MOF name, adsorbate, and temperature\n4: MOF name and temperature\n5: Adsorbate and temperature\n6: No additional information.'))
+   # plt.plot(tempPressArray, tempLoadingArray, label=dataSetLabels[dCount].rsplit('_',2)[0].replace('_',' ')+' Literature', marker='o', markersize=10, linestyle='none')
+plt.plot(tempPressArray, tempLoadingArray, label='Literature', marker='o', markersize=10, linestyle='none')
 
     
 #determine upper axis limits
@@ -149,10 +154,12 @@ plotTitle = raw_input('Enter the desired plot title. File extension added automa
 
 
 #finally, we have two numpy arrays that contain the data we need. Make the plot and save it
-plt.plot(pressures1,loading1,label=dataLabel.rsplit('_',3)[0].replace('_',' ')+' Calc', linewidth=2.0)
+#plt.plot(pressures1,loading1,label=dataLabel.rsplit('_',3)[0].replace('_',' ')+' Calculated', linewidth=2.0)
+plt.plot(pressures1,loading1,label='Calculated', linewidth=2.0)
+
 plt.ylabel('Loading (mol/kg)', fontsize=20)
 plt.xlabel('Pressure (mbar)', fontsize=20)
-plt.legend(loc=4,prop={'size':18})
+plt.legend(loc=2,prop={'size':18})
 plt.axis((0,xMax,0,yMax))
 plt.rc('xtick', labelsize=20)
 plt.rc('ytick', labelsize=20)
