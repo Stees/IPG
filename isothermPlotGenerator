@@ -144,7 +144,7 @@ if inputRequiredController == 'y':
             #print('What information do you need to include in the legend? Calculation/literature is added automatically.\n')
             # legendSelection = int(raw_input('1: MOF name only\n2: MOF name and adsorbate\n3:MOF name, adsorbate, and temperature\n4: MOF name and temperature\n5: Adsorbate and temperature\n6: No additional information.'))
             # plt.plot(tempPressArray, tempLoadingArray, label=dataSetLabels[dCount].rsplit('_',2)[0].replace('_',' ')+' Literature', marker='o', markersize=10, linestyle='none')
-plt.plot(tempPressArray, tempLoadingArray, label='Literature', marker='o', markersize=14, linestyle='none')
+    plt.plot(tempPressArray, tempLoadingArray, label='Literature', marker='o', markersize=14, linestyle='none')
 
     
 #determine upper axis limits
