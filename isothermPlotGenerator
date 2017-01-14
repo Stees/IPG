@@ -154,7 +154,6 @@ yMax = int(math.ceil(float(max(loading1))))
 #get plot title
 pT = subprocess.Popen('pwd', stdout=subprocess.PIPE)
 plotTitle = str(str(pT.communicate()[0].split()[0])).rsplit('/',1)[1]
-print('{0}'.format(plotTitle))
 
 
 #finally, we have two numpy arrays that contain the data we need. Make the plot and save it
