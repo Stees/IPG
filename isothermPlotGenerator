@@ -7,6 +7,7 @@ import math
 import matplotlib.pyplot as plt
 from re import sub
 import time
+import subprocess
 
 readline.parse_and_bind("tab: complete")
 readline.set_completer_delims(readline.get_completer_delims().replace('-',''))
@@ -89,7 +90,7 @@ while (controller != 1):
     inputRequiredController = raw_input('\n\nDo data sets from the literature need to be plotted? (y/n)\n')
     if (inputRequiredController == 'n'):
         controller = 1
-        totalDataSets = len(numberList)
+        #totalDataSets = len(numberList)
     elif (inputRequiredController == 'y'):
         controller = 1
         #now display the data file names in th literatureData directory for the user
@@ -120,11 +121,12 @@ dataSetLabels = np.array([])
 plt.figure(figsize=(16,9))
 
 #bring in the desired literature data
-for dCount, P in enumerate(litNumList):
-    tempPressArray = np.array([])
-    tempLoadingArray = np.array([])
-    dataSetLabels = np.append(dataSetLabels, litDatLines[int(P)][:-1].replace('.xls',''))
-    fileName = os.path.join(os.path.expanduser('~'),'/ihome/kjohnson/jpr54/raspa/isotherms/literatureData/' + litDatLines[int(P)][:-1])
+if inputRequiredController == 'y':
+    for dCount, P in enumerate(litNumList):
+        tempPressArray = np.array([])
+        tempLoadingArray = np.array([])
+        dataSetLabels = np.append(dataSetLabels, litDatLines[int(P)][:-1].replace('.xls',''))
+        fileName = os.path.join(os.path.expanduser('~'),'/ihome/kjohnson/jpr54/raspa/isotherms/literatureData/' + litDatLines[int(P)][:-1])
 
     #read in the data
     tempFile = open(fileName, 'r')
@@ -137,11 +139,11 @@ for dCount, P in enumerate(litNumList):
         if (jCount > 0):
             tempPressArray = np.append(tempPressArray, line.split()[0])
             tempLoadingArray = np.append(tempLoadingArray, line.split()[1])
-    legendSelection = 0
-   # while (legendSelection != 1):
-        #print('What information do you need to include in the legend? Calculation/literature is added automatically.\n')
-       # legendSelection = int(raw_input('1: MOF name only\n2: MOF name and adsorbate\n3:MOF name, adsorbate, and temperature\n4: MOF name and temperature\n5: Adsorbate and temperature\n6: No additional information.'))
-   # plt.plot(tempPressArray, tempLoadingArray, label=dataSetLabels[dCount].rsplit('_',2)[0].replace('_',' ')+' Literature', marker='o', markersize=10, linestyle='none')
+            legendSelection = 0
+            # while (legendSelection != 1):
+            #print('What information do you need to include in the legend? Calculation/literature is added automatically.\n')
+            # legendSelection = int(raw_input('1: MOF name only\n2: MOF name and adsorbate\n3:MOF name, adsorbate, and temperature\n4: MOF name and temperature\n5: Adsorbate and temperature\n6: No additional information.'))
+            # plt.plot(tempPressArray, tempLoadingArray, label=dataSetLabels[dCount].rsplit('_',2)[0].replace('_',' ')+' Literature', marker='o', markersize=10, linestyle='none')
 plt.plot(tempPressArray, tempLoadingArray, label='Literature', marker='o', markersize=14, linestyle='none')
 
     
@@ -150,7 +152,9 @@ xMax = int(math.ceil(float(max(pressures1))))
 yMax = int(math.ceil(float(max(loading1))))
 
 #get plot title
-plotTitle = raw_input('Enter the desired plot title. File extension added automatically.\n')
+pT = subprocess.Popen('pwd', stdout=subprocess.PIPE)
+plotTitle = str(str(pT.communicate()[0].split()[0])).rsplit('/',1)[1]
+print('{0}'.format(plotTitle))
 
 
 #finally, we have two numpy arrays that contain the data we need. Make the plot and save it
@@ -158,7 +162,10 @@ plotTitle = raw_input('Enter the desired plot title. File extension added automa
 plt.plot(pressures1,loading1,label='Calculated', linewidth=3.0)
 plt.ylabel('Loading (mol/kg)', fontsize=24)
 plt.xlabel('Pressure (mbar)', fontsize=24)
-plt.legend(loc=2,prop={'size':24})
+
+#only print legend if literature data is included
+if inputRequiredController == 'y':
+    plt.legend(loc=2,prop={'size':24})
 plt.axis((0,xMax,0,yMax))
 plt.savefig(plotTitle)
 plt.show()
