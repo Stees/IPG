@@ -35,7 +35,7 @@ for pressureLine in pressureLines:
 
 #make the np array
 pressures1 = np.array(sorted(pressures))
-print('{0}'.format(pressures1))
+#print('{0}'.format(pressures1)) #working up to here
 #get the locations of the output files
 os.system('find -name "output*" -printf "%h\n" > locations.dat')
 
@@ -44,7 +44,7 @@ locationsFile = open('locations.dat','r')
 Lines = locationsFile.readlines()
 locationsFile.close()
 os.system('rm locations.dat')
-
+#print('{0}'.format(Lines))
 #for each location, navigate to the directory, execute the removal of the desired data, and return to the previous directory.
 for line in Lines:
     os.system('cd {0} && grep "absolute adsorption" output_* | grep "avg." | tail -n 1 > loading.dat && cd $OLDPWD'.format(line[:-1]))
@@ -67,11 +67,10 @@ for line in loadingLocations:
     tempDataLine = tempDataFile.readline()
     tempDataFile.close()
     dataBuffer = tempDataLine.split()[8]
-    loading.append(dataBuffer[:-1])
+    loading.append(float(dataBuffer[:-1]))
 
 #now the loading array must be converted to a numpy array so it can be plotted.
 loading1 = np.array(sorted(loading))
-
 #remove all loading.dat files
 os.system('find . -name \loading.dat -type f -delete')
 
@@ -161,7 +160,6 @@ plotTitle = str(str(pT.communicate()[0].split()[0])).rsplit('/',1)[1]
 plt.plot(pressures1,loading1,label='Calculated', linewidth=3.0)
 plt.ylabel('Loading (mol/kg)', fontsize=24)
 plt.xlabel('Pressure (mbar)', fontsize=24)
-
 #only print legend if literature data is included
 if inputRequiredController == 'y':
     plt.legend(loc=2,prop={'size':24})
