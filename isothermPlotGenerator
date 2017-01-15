@@ -35,7 +35,7 @@ for pressureLine in pressureLines:
 
 #make the np array
 pressures1 = np.array(sorted(pressures))
-
+print('{0}'.format(pressures1))
 #get the locations of the output files
 os.system('find -name "output*" -printf "%h\n" > locations.dat')
 
