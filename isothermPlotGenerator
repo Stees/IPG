@@ -47,7 +47,7 @@ os.system('rm locations.dat')
 #print('{0}'.format(Lines))
 #for each location, navigate to the directory, execute the removal of the desired data, and return to the previous directory.
 for line in Lines:
-    os.system('cd {0} && grep "absolute adsorption" output_* | grep "avg." | tail -n 1 > loading.dat && cd $OLDPWD'.format(line[:-1]))
+    os.system('cd {0} && grep "excess adsorption" output_* | grep "avg." | tail -n 1 > loading.dat && cd $OLDPWD'.format(line[:-1]))
 
 #the line containing the desired data is now present in a file titled 'loading.dat' in each Nmbar/Output/System_0/ directory. Now, we need to bring the locations of each of these files into python to get the data into the code. They are the same locations as the output files, but we need to get the full path, including the output file. This will be a bit simpler than the previous "find".
 os.system('find -name "loading.dat" > loadingLocations.dat')
