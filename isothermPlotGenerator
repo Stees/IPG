@@ -16,72 +16,24 @@ readline.set_completer_delims(readline.get_completer_delims().replace('-',''))
 plt.rc('xtick', labelsize=20)
 plt.rc('ytick', labelsize=20)
 
-#identify all directories in the current location save to directories.dat
-os.system('ls -d */ > pressureNames.dat')
+#identify the directories and get the pressure data
+Dirs = subprocess.Popen(r'ls -d */', stdout=subprocess.PIPE, shell=True)
+Pressures = Dirs.communicate()[0].replace("mbar/\n"," ").split()
+pressures1 = np.sort(np.array([float(i) for i in Pressures]))
 
-#take strings of pressures in pressureNames.dat, and strip the 'mbar' from the values. Then, convert each value to int, and save it in an array.
-pressuresFile = open('pressureNames.dat','r')
-pressureLines = pressuresFile.readlines()
-pressuresFile.close()
-os.system('rm pressureNames.dat')
-
-#create array for pressures
-pressures = []
-
-#stripping the unwanted characters, saving in an array
-for pressureLine in pressureLines:
-    pressureLineMod = pressureLine.replace('mbar','').replace('/','').replace("\\",'')
-    pressures.append(int(pressureLineMod))
-
-#make the np array
-pressures1 = np.array(sorted(pressures))
-#print('{0}'.format(pressures1)) #working up to here
 #get the locations of the output files
-os.system('find -name "output*" -printf "%h\n" > locations.dat')
+locs = subprocess.Popen(r'find -name "output*"', stdout=subprocess.PIPE, shell=True)
+Lines = locs.communicate()[0].replace("\n"," ").split()
 
-#get these locations into this code
-locationsFile = open('locations.dat','r')
-Lines = locationsFile.readlines()
-locationsFile.close()
-os.system('rm locations.dat')
-#print('{0}'.format(Lines))
-#for each location, navigate to the directory, execute the removal of the desired data, and return to the previous directory.
-for line in Lines:
-    os.system('cd {0} && grep "excess adsorption" output_* | grep "avg." | tail -n 1 > loading.dat && cd $OLDPWD'.format(line[:-1]))
-
-#the line containing the desired data is now present in a file titled 'loading.dat' in each Nmbar/Output/System_0/ directory. Now, we need to bring the locations of each of these files into python to get the data into the code. They are the same locations as the output files, but we need to get the full path, including the output file. This will be a bit simpler than the previous "find".
-os.system('find -name "loading.dat" > loadingLocations.dat')
-
-#now read in the locations. Then, close and delete the file.
-lLdataFile = open('loadingLocations.dat','r')
-loadingLocations = lLdataFile.readlines()
-lLdataFile.close()
-os.system('rm loadingLocations.dat')
-
-#create an empty array for the loading values
 loading = []
-
-#next, we need to open the file in each location using python. Then, we need to read the line in the file. Next, the file must be closed. Take the temporary data line, split out the desired value, and append it to the array.
-for line in loadingLocations:
-    tempDataFile = open(line[:-1],'r')
-    tempDataLine = tempDataFile.readline()
-    tempDataFile.close()
-    dataBuffer = tempDataLine.split()[8]
-    loading.append(float(dataBuffer[:-1]))
-
-#now the loading array must be converted to a numpy array so it can be plotted.
+for line in Lines:
+    getData = subprocess.Popen(r'grep -F "Average loading excess [cm^3 (STP)/g" output_*', stdout=subprocess.PIPE, cwd=line.rsplit('/',1)[0], shell=True)
+    loading.append(float(getData.communicate()[0].split()[6]))
 loading1 = np.array(sorted(loading))
-#remove all loading.dat files
-os.system('find . -name \loading.dat -type f -delete')
 
 #get the simulation data label from the current directory name
-os.system('printf "%s\n" "${PWD##*/}" > location')
-
-#get the data label out of the file
-tempLabFile = open('location','r')
-dataLabel = tempLabFile.readline()
-tempLabFile.close()
-os.system('rm location')
+labelDir = subprocess.Popen(r'printf "%s" "${PWD##*/}"', stdout=subprocess.PIPE, shell=True)
+dataLabel = labelDir.communicate()[0]
 
 #determine if a literature data set needs to be plotted
 controller = 0
@@ -89,20 +41,14 @@ while (controller != 1):
     inputRequiredController = raw_input('\n\nDo data sets from the literature need to be plotted? (y/n)\n')
     if (inputRequiredController == 'n'):
         controller = 1
-        #totalDataSets = len(numberList)
     elif (inputRequiredController == 'y'):
         controller = 1
         #now display the data file names in th literatureData directory for the user
-        os.system('ls ~/raspa/isotherms/literatureData/ > literatureDataFiles.dat')
-        litDatFile = open('literatureDataFiles.dat','r')
-        litDatLines = litDatFile.readlines()
-        litDatFile.close()
-        os.system('rm literatureDataFiles.dat')
+        litData = subprocess.Popen(r'ls /ihome/kjohnson/jpr54/raspa/isotherms/literatureData/', stdout=subprocess.PIPE, shell=True)
+        litDataLines = litData.communicate()[0].split()
         print('\nData for the following calculations are available:\n')
-        time.sleep(1)
-        for i, line in enumerate(litDatLines):
+        for i, line in enumerate(litDataLines):
             print('{0}: {1}'.format(i,line))
-        time.sleep(1)
 
         #now determine which data sets the user would like to include
         print('\nEnter the numbers corresponding to the calculations you would like to plot, separated by spaces.\n')
@@ -115,7 +61,6 @@ while (controller != 1):
         time.sleep(1)
 
 dataSetLabels = np.array([])
-
 #define the figure size
 plt.figure(figsize=(16,9))
 
@@ -124,8 +69,8 @@ if inputRequiredController == 'y':
     for dCount, P in enumerate(litNumList):
         tempPressArray = np.array([])
         tempLoadingArray = np.array([])
-        dataSetLabels = np.append(dataSetLabels, litDatLines[int(P)][:-1].replace('.xls',''))
-        fileName = os.path.join(os.path.expanduser('~'),'/ihome/kjohnson/jpr54/raspa/isotherms/literatureData/' + litDatLines[int(P)][:-1])
+        dataSetLabels = np.append(dataSetLabels, litDataLines[int(P)])
+        fileName = '/ihome/kjohnson/jpr54/raspa/isotherms/literatureData/' + litDataLines[int(P)]
 
     #read in the data
     tempFile = open(fileName, 'r')
@@ -158,7 +103,7 @@ plotTitle = str(str(pT.communicate()[0].split()[0])).rsplit('/',1)[1]
 #finally, we have two numpy arrays that contain the data we need. Make the plot and save it
 #plt.plot(pressures1,loading1,label=dataLabel.rsplit('_',3)[0].replace('_',' ')+' Calculated', linewidth=2.0)
 plt.plot(pressures1,loading1,label='Calculated', linewidth=3.0)
-plt.ylabel('Loading (mol/kg)', fontsize=24)
+plt.ylabel('Loading (cc/g STP)', fontsize=24)
 plt.xlabel('Pressure (mbar)', fontsize=24)
 #only print legend if literature data is included
 if inputRequiredController == 'y':
