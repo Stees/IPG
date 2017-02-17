@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 #This code will create a constant temperature isotherm plot. It should be executed in the directory containing all of the loading directories for a specified condition, i.e. temperature.
-import os
 import readline
 import numpy as np
 import math
@@ -21,15 +20,12 @@ Dirs = subprocess.Popen(r'ls -d */', stdout=subprocess.PIPE, shell=True)
 Pressures = Dirs.communicate()[0].replace("mbar/\n"," ").split()
 pressures1 = np.sort(np.array([float(i) for i in Pressures]))
 
-#get the locations of the output files
-locs = subprocess.Popen(r'find -name "output*"', stdout=subprocess.PIPE, shell=True)
-Lines = locs.communicate()[0].replace("\n"," ").split()
-
 loading = []
-for line in Lines:
-    getData = subprocess.Popen(r'grep -F "Average loading excess [cm^3 (STP)/g" output_*', stdout=subprocess.PIPE, cwd=line.rsplit('/',1)[0], shell=True)
+for pressure in pressures1:
+    loc = '{0}mbar/Output/System_0/'.format(str(pressure))
+    getData = subprocess.Popen(r'grep -F "Average loading excess [cm^3 (STP)/g" output_*', stdout=subprocess.PIPE, cwd=loc, shell=True)
     loading.append(float(getData.communicate()[0].split()[6]))
-loading1 = np.array(sorted(loading))
+loading1 = np.array(loading)
 
 #get the simulation data label from the current directory name
 labelDir = subprocess.Popen(r'printf "%s" "${PWD##*/}"', stdout=subprocess.PIPE, shell=True)
@@ -99,16 +95,16 @@ yMax = int(math.ceil(float(max(loading1))))
 pT = subprocess.Popen('pwd', stdout=subprocess.PIPE)
 plotTitle = str(str(pT.communicate()[0].split()[0])).rsplit('/',1)[1]
 
-
 #finally, we have two numpy arrays that contain the data we need. Make the plot and save it
 #plt.plot(pressures1,loading1,label=dataLabel.rsplit('_',3)[0].replace('_',' ')+' Calculated', linewidth=2.0)
-plt.plot(pressures1,loading1,label='Calculated', linewidth=3.0)
+plt.plot(pressures1,loading1,label='Calculated', linewidth=3.0, marker='*', markersize=14)
+print('{0} {1}'.format(pressures1,loading1))
 plt.ylabel('Loading (cc/g STP)', fontsize=24)
 plt.xlabel('Pressure (mbar)', fontsize=24)
 #only print legend if literature data is included
 if inputRequiredController == 'y':
     plt.legend(loc=2,prop={'size':24})
-plt.axis((0,xMax,0,yMax))
+plt.axis((0,xMax,0,yMax*1.2))
 plt.savefig(plotTitle)
 plt.show()
 
