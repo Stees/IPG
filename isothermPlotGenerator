@@ -98,12 +98,11 @@ plotTitle = str(str(pT.communicate()[0].split()[0])).rsplit('/',1)[1]
 #finally, we have two numpy arrays that contain the data we need. Make the plot and save it
 #plt.plot(pressures1,loading1,label=dataLabel.rsplit('_',3)[0].replace('_',' ')+' Calculated', linewidth=2.0)
 plt.plot(pressures1,loading1,label='Calculated', linewidth=3.0, marker='*', markersize=14)
-print('{0} {1}'.format(pressures1,loading1))
 plt.ylabel('Loading (cc/g STP)', fontsize=24)
 plt.xlabel('Pressure (mbar)', fontsize=24)
 #only print legend if literature data is included
 if inputRequiredController == 'y':
-    plt.legend(loc=2,prop={'size':24})
+    plt.legend(loc=7,prop={'size':24})
 plt.axis((0,xMax,0,yMax*1.2))
 plt.savefig(plotTitle)
 plt.show()
