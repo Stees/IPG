@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+#This code will plot user-selected isotherm data, and can also plot literature data.
 #This code will create a constant temperature isotherm plot. It should be executed in the directory containing all of the loading directories for a specified condition, i.e. temperature.
 import readline
 import numpy as np
@@ -104,6 +105,18 @@ plt.xlabel('Pressure (mbar)', fontsize=24)
 if inputRequiredController == 'y':
     plt.legend(loc=7,prop={'size':24})
 plt.axis((0,xMax,0,yMax*1.2))
-plt.savefig(plotTitle)
-plt.show()
 
+#write the plot to a file if desired
+pControl = 0
+while pControl != 1:
+    savePlot = raw_input('save the plot? y/n\n')
+    if (savePlot == 'y'):
+        plt.savefig(plotTitle)
+        pControl = 1
+    elif (savePlot == 'n'):
+        print('owl\n')
+        pControl = 1
+    else:
+        print('try again\n')
+
+plt.show()
