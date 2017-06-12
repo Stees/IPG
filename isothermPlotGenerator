@@ -26,7 +26,7 @@ user1gen = subprocess.Popen('find -name "Isotherm" -printf "%h\n"', stdout=subpr
 user1Locs = user1gen.communicate()[0].split()
 user1Locs = [k.split('.',1)[1] for k in user1Locs]
 user1LocsF = [user1Path+'{0}'.format(b) for b in user1Locs]
-user2Path = '/ihome/kjohnson/bmk62/'
+user2Path = '/ihome/kjohnson/bmk62'
 user2gen = subprocess.Popen('find -name "Isotherm" -printf "%h\n"', stdout=subprocess.PIPE, cwd=user2Path, shell=True)
 user2Locs = user2gen.communicate()[0].split()
 user2Locs = [M.split('.',1)[1] for M in user2Locs]
@@ -96,40 +96,36 @@ if inputRequiredController == 'y':
     for dCount, P in enumerate(litNumList):
         tempPressArray = np.array([])
         tempLoadingArray = np.array([])
-        dataSetLabels = np.append(dataSetLabels, litDataLines[int(P)])
+        #dataSetLabels = np.append(dataSetLabels, litDataLines[int(P)])
         fileName = '/ihome/kjohnson/jpr54/raspa/isotherms/literatureData/' + litDataLines[int(P)]
 
     #read in the data
-    tempFile = open(fileName, 'r')
-    tempLines = tempFile.readlines()
-    tempFile.close()
-    tempLine = tempLines[0][:-1]
-    #save the first line in the label, plot the literature data
-    colorSuccess = 0
-    #match the colors
-    testLabel = dataSetLabels[-1].split('_',1)[0] + '_' + dataSetLabels[-1].split('_',2)[1] + '_' + dataSetLabels[-1].split('_',3)[2]
-    print('{0}'.format(testLabel))
-    for kCounter, nameString in enumerate(dataSetLabels[:-1]):
-        if (testLabel in nameString):
-            print('{0}'.format(nameString))
-            print('{0}'.format(kCounter))
-            colorMatch = colorArray[kCounter]
-            colorSuccess = 1
-    for jCount, line in enumerate(tempLines):
-        if (jCount > 0):
-            tempPressArray = np.append(tempPressArray, line.split()[0])
-            #print('{0}'.format(line.split()))
-            tempLoadingArray = np.append(tempLoadingArray, line.split()[1])
-            legendSelection = 0
-            # while (legendSelection != 1):
-            #print('What information do you need to include in the legend? Calculation/literature is added automatically.\n')
-            # legendSelection = int(raw_input('1: MOF name only\n2: MOF name and adsorbate\n3:MOF name, adsorbate, and temperature\n4: MOF name and temperature\n5: Adsorbate and temperature\n6: No additional information.'))
-            # plt.plot(tempPressArray, tempLoadingArray, label=dataSetLabels[dCount].rsplit('_',2)[0].replace('_',' ')+' Literature', marker='o', markersize=10, linestyle='none')
-    dataSetLabels = np.append(dataSetLabels, tempLine)
-    if (colorSuccess == 1):
-        plt.plot(tempPressArray, tempLoadingArray, label=dataSetLabels[dCount+len(calcNumList)], marker='o', markersize=14, linestyle='none', color=colorMatch)
-    elif (colorSuccess == 0):
-        plt.plot(tempPressArray, tempLoadingArray, label=dataSetLabels[dCount+len(calcNumList)], marker='o', markersize=14, linestyle='none')
+        tempFile = open(fileName, 'r')
+        tempLines = tempFile.readlines()
+        tempFile.close()
+        tempLine = tempLines[0][:-1]
+        #save the first line in the label, plot the literature data
+        #match the colors
+        testLabel = litDataLines[int(P)].split('_',1)[0] + '_' + litDataLines[int(P)].split('_',2)[1] + '_' + litDataLines[int(P)].split('_',3)[2]
+        colorSuccess = 0
+        for kCounter, nameString in enumerate(dataSetLabels[:]):
+            if (testLabel in nameString):
+                colorMatch = colorArray[kCounter]
+                colorSuccess = 1
+            for jCount, line in enumerate(tempLines):
+                if (jCount > 0):
+                    tempPressArray = np.append(tempPressArray, line.split()[0])
+                    tempLoadingArray = np.append(tempLoadingArray, line.split()[1])
+                    legendSelection = 0
+                    # while (legendSelection != 1):
+                    #print('What information do you need to include in the legend? Calculation/literature is added automatically.\n')
+                    # legendSelection = int(raw_input('1: MOF name only\n2: MOF name and adsorbate\n3:MOF name, adsorbate, and temperature\n4: MOF name and temperature\n5: Adsorbate and temperature\n6: No additional information.'))
+                    # plt.plot(tempPressArray, tempLoadingArray, label=dataSetLabels[dCount].rsplit('_',2)[0].replace('_',' ')+' Literature', marker='o', markersize=10, linestyle='none')
+            #dataSetLabels = np.append(dataSetLabels, tempLine)
+        if (colorSuccess == 1):
+            plt.plot(tempPressArray, tempLoadingArray, label=tempLine, marker='o', markersize=14, linestyle='none', color=colorMatch)
+        elif (colorSuccess == 0):
+            plt.plot(tempPressArray, tempLoadingArray, label=tempLine, marker='o', markersize=14, linestyle='none')
 
     
 #determine upper axis limits
@@ -151,7 +147,7 @@ plt.axis((0,xMax,0,yMax*1.2))
 #write the plot to a file if desired
 pControl = 0
 while pControl != 1:
-    savePlot = raw_input('save the plot? y/n\n')
+    savePlot = raw_input('\nsave the plot? y/n\n')
     if (savePlot == 'y'):
         plt.savefig(plotTitle)
         pControl = 1
