@@ -29,7 +29,10 @@ while (handle != 1 and handle != 2):
         print('\nInvalid entry. Try again.\n')
 #identify all the isotherms that could be plotted, but first open a dump file for error output
 print('\nPlease wait while I gather all the data. This could take a minute.\n')
-f = open('/ihome/kjohnson/jpr54/trash.txt', "w")
+if user == 'jpr54':
+    f = open('/ihome/kjohnson/jpr54/trash.txt', "w")
+elif user == 'bmk62':
+    f = open('/ihome/kjohnson/bmk62/trash.txt', "w")
 user1Path = '/ihome/kjohnson/jpr54/raspa/isotherms'
 user1gen = subprocess.Popen('find -name "Isotherm" -printf "%h\n"', stdout=subprocess.PIPE, stderr=f, cwd=user1Path, shell=True)
 user1Locs = user1gen.communicate()[0].split()
@@ -38,7 +41,10 @@ user1LocsF = [user1Path+'{0}'.format(b) for b in user1Locs]
 user2Path = '/ihome/kjohnson/bmk62'
 user2gen = subprocess.Popen('find -name "Isotherm" -printf "%h\n"', stdout=subprocess.PIPE, stderr=f, cwd=user2Path, shell=True)
 f.close()
-subprocess.Popen('rm /ihome/kjohnson/jpr54/trash.txt', shell=True)
+if user == 'jpr54':
+    subprocess.Popen('rm /ihome/kjohnson/jpr54/trash.txt', shell=True)
+elif user == 'bmk62':
+    subprocess.Popen('rm /ihome/kjohnson/bmk62/trash.txt', shell=True)
 user2Locs = user2gen.communicate()[0].split()
 user2Locs = [M.split('.',1)[1] for M in user2Locs]
 user2LocsF = [user2Path+'{0}'.format(N) for N in user2Locs]
