@@ -20,6 +20,7 @@ plt.rc('xtick', labelsize=10)
 plt.rc('ytick', labelsize=10)
 plt.rcParams["figure.figsize"] = 6,4
 handle = 0
+fig,ax = plt.subplots()
 while (handle != 1 and handle != 2):
     selector = raw_input('\nDo you want a:\n1: Standard plot\n2: Semi-log plot\n')
     if (selector == '1'):
@@ -164,7 +165,13 @@ yMax = int(math.ceil(float(max(loading1))))
 #plt.plot(pressures1,loading1,label='Calculated', linewidth=3.0, marker='*', markersize=14)
 plt.ylabel('Loading (cc/g STP)', fontsize=10)
 plt.xlabel('Pressure (mbar)', fontsize=10)
-plt.legend(loc=4,prop={'size':10})
+handles, labels = ax.get_legend_handles_labels()
+labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+if handle == 1:
+    plt.legend(handles, labels, loc=4,prop={'size':10},frameon=False)
+elif handle == 2:
+    plt.legend(handles, labels, loc=2,prop={'size':10},frameon=False)
+    plt.subplots_adjust(bottom=0.12)
 plt.axis((0,xMax,0,yMax*1.2))
 #write the plot to a file if desired
 pControl = 0
