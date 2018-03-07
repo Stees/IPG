@@ -19,6 +19,7 @@ name = str(user.communicate()[0].split()).replace("['","").replace("']","")
 plt.rc('xtick', labelsize=10)
 plt.rc('ytick', labelsize=10)
 plt.rcParams["figure.figsize"] = 6,4
+plt.rcParams["figure.dpi"]= 300
 handle = 0
 fig,ax = plt.subplots()
 while (handle != 1 and handle != 2):
@@ -41,26 +42,31 @@ user1Locs = user1gen.communicate()[0].split()
 user1Locs = [k.split('.',1)[1] for k in user1Locs]
 user1LocsF = [user1Path+'{0}'.format(b) for b in user1Locs]
 user2Path = '/ihome/kjohnson/bmk62'
-user2gen = subprocess.Popen('find -name "Isotherm" -printf "%h\n"', stdout=subprocess.PIPE, stderr=f, cwd=user2Path, shell=True)
+#user2gen = subprocess.Popen('find -name "Isotherm" -printf "%h\n"', stdout=subprocess.PIPE, stderr=f, cwd=user2Path, shell=True)
 f.close()
 if name == 'jpr54':
     subprocess.Popen('rm /ihome/kjohnson/jpr54/trash.txt', shell=True)
 elif name == 'bmk62':
     subprocess.Popen('rm /ihome/kjohnson/bmk62/trash.txt', shell=True)
-user2Locs = user2gen.communicate()[0].split()
-user2Locs = [M.split('.',1)[1] for M in user2Locs]
-user2LocsF = [user2Path+'{0}'.format(N) for N in user2Locs]
-availableIsotherms = user1LocsF + user2LocsF
+#user2Locs = user2gen.communicate()[0].split()
+#user2Locs = [M.split('.',1)[1] for M in user2Locs]
+#user2LocsF = [user2Path+'{0}'.format(N) for N in user2Locs]
+availableIsotherms = user1LocsF #+ user2LocsF
 aControl = 0
 print('Available isotherms for plotting:\n')
 for j, line in enumerate(availableIsotherms):
     print('{0}: {1}'.format(j,line))
-print('\nEnter the numbers corresponding to the calculations you would like to plot, separated by spaces.\n')
-calcNumbers = raw_input('For example: 0 1\n')
-calcNumList = np.unique(np.array([int(s) for s in calcNumbers.split() if s.isdigit()]))
+while aControl == 0:
+    print('\nEnter the numbers corresponding to the calculations you would like to plot, separated by spaces.\n')
+    calcNumbers = raw_input('For example: 0 1\n')
+    calcNumList = np.unique(np.array([int(s) for s in calcNumbers.split() if s.isdigit()]))
+    if calcNumList.any():
+        aControl = 1
+    else:
+        print('\nPlease try again.\n')
 dataSetLabels = np.array([])
 colorArray = np.array([])
-kolor = np.array(['g','r','k','m','c','b','y'])
+kolor = np.array(['g','m','b','k','c','r','y'])
 markerA = np.array(['o','d','h','s','*','v','p'])
 #plot the calculated data
 for count, p in enumerate(calcNumList):
@@ -77,11 +83,11 @@ for count, p in enumerate(calcNumList):
     labelDir = subprocess.Popen('printf "%s" "${PWD##*/}"', stdout=subprocess.PIPE, cwd=availableIsotherms[p], shell=True)
     dataSetLabels = np.append(dataSetLabels,labelDir.communicate()[0])
     if (handle == 1):
-        colorHolder, = plt.plot(pressures1, loading1, label=dataSetLabels[count], linewidth=2.0, color=kolor[count])
+        colorHolder, = plt.plot(pressures1, loading1, label=dataSetLabels[count].split('_',1)[0], linewidth=2.0, color=kolor[count])
     elif (handle == 2):
-        colorHolder, = plt.semilogx(pressures1, loading1, label=dataSetLabels[count], linewidth=2.0, color=kolor[count])
+        colorHolder, = plt.semilogx(pressures1, loading1, label=dataSetLabels[count].split('_',1)[0], linewidth=2.0, color=kolor[count])
     filename = dataSetLabels[count]
-    makeRaw = open(filename, 'w')
+    makeRaw = open("/ihome/kjohnson/jpr54/raspa/isotherms/plotData/{0}".format(filename), 'w')
     makeRaw.write('{0} {1}'.format(pressures1, loading1))
     makeRaw.close()
     colorArray = np.append(colorArray, colorHolder.get_color()) 
@@ -142,17 +148,17 @@ if inputRequiredController == 'y':
             markerCount = 0
         if (colorSuccess == 1):
             if (handle == 1):
-                plt.plot(tempPressArray, tempLoadingArray, label=tempLine, marker=markerA[markerCount], markersize=10, linestyle='none', color=colorMatch)
+                plt.plot(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=10, linestyle='none', color=colorMatch)
                 markerCount = markerCount + 1
             elif (handle == 2):
-                plt.semilogx(tempPressArray, tempLoadingArray, label=tempLine, marker=markerA[markerCount], markersize=10, linestyle='non', color=colorMatch)
+                plt.semilogx(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=10, linestyle='none', color=colorMatch)
                 markerCount = markerCount + 1
         elif (colorSuccess == 0):
             if (handle == 1):
-                plt.plot(tempPressArray, tempLoadingArray, label=tempLine, marker=markerA[markerCount], markersize=10, linestyle='none')
+                plt.plot(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=10, linestyle='none')
                 markerCount = markerCount + 1
             elif (handle == 2):
-                plt.semilogx(tempPressArray, tempLoadingArray, label=tempLine, marker=markerA[markerCount], markersize=10, linestyle='none')
+                plt.semilogx(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=10, linestyle='none')
                 markerCount = markerCount + 1
 #determine upper axis limits
 xMax = int(math.ceil(float(max(pressures1))))
@@ -172,14 +178,14 @@ if handle == 1:
 elif handle == 2:
     plt.legend(handles, labels, loc=2,prop={'size':10},frameon=False)
     plt.subplots_adjust(bottom=0.12)
-plt.axis((0,xMax,0,yMax*1.2))
+plt.axis((0,xMax,-5,30))
 #write the plot to a file if desired
 pControl = 0
 while pControl != 1:
     savePlot = raw_input('\nsave the plot? y/n\n')
     if (savePlot == 'y'):
         plotTitle = raw_input('\nEnter a name for the plot.\n')
-        plt.savefig(plotTitle, dpi = 300)
+        plt.savefig("/ihome/kjohnson/jpr54/raspa/isotherms/plots/{0}".format(plotTitle), dpi = 300)
         pControl = 1
     elif (savePlot == 'n'):
         pControl = 1
