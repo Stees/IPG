@@ -31,6 +31,15 @@ while (handle != 1 and handle != 2):
     else:
         print('\nInvalid entry. Try again.\n')
 #identify all the isotherms that could be plotted, but first open a dump file for error output
+adsorptionType = 0
+while (adsorptionType != 1 and adsorptionType != 2):
+    selector = raw_input('\nChoose desired adsorption type:\n1: Excess adsorption\n2: Absolute adsorption\n\n')
+    if (selector == '1'):
+        adsorptionType = 1
+    elif (selector == '2'):
+        adsorptionType = 2
+    else:
+        print('\nInvalid entry. Try again.\n')
 print('\nPlease wait while I gather all the data. This could take a minute.\n')
 if name == 'jpr54':
     f = open('/ihome/kjohnson/jpr54/trash.txt', "w")
@@ -76,7 +85,10 @@ for count, p in enumerate(calcNumList):
     loading = []
     for pressure in pressures1:
         loc = availableIsotherms[p]+'/'+'{0}mbar/Output/System_0/'.format(str(pressure))
-        getData = subprocess.Popen('grep -F "Average loading excess [cm^3 (STP)/g" output_*', stdout=subprocess.PIPE, cwd=loc, shell=True)
+        if adsorptionType == 1:
+            getData = subprocess.Popen('grep -F "Average loading excess [cm^3 (STP)/g" output_*', stdout=subprocess.PIPE, cwd=loc, shell=True)
+        elif adsorptionType == 2:
+            getData = subprocess.Popen('grep -F "Average loading absolute [cm^3 (STP)/g" output_*', stdout=subprocess.PIPE, cwd=loc, shell=True)
         #temporary lines
         loading.append(float(getData.communicate()[0].split()[6]))
     loading1 = np.array(loading)
@@ -148,17 +160,17 @@ if inputRequiredController == 'y':
             markerCount = 0
         if (colorSuccess == 1):
             if (handle == 1):
-                plt.plot(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=10, linestyle='none', color=colorMatch)
+                plt.plot(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=8, linestyle='none', color=colorMatch)
                 markerCount = markerCount + 1
             elif (handle == 2):
-                plt.semilogx(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=10, linestyle='none', color=colorMatch)
+                plt.semilogx(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=8, linestyle='none', color=colorMatch)
                 markerCount = markerCount + 1
         elif (colorSuccess == 0):
             if (handle == 1):
-                plt.plot(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=10, linestyle='none')
+                plt.plot(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=8, linestyle='none')
                 markerCount = markerCount + 1
             elif (handle == 2):
-                plt.semilogx(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=10, linestyle='none')
+                plt.semilogx(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=8, linestyle='none')
                 markerCount = markerCount + 1
 #determine upper axis limits
 xMax = int(math.ceil(float(max(pressures1))))
@@ -169,7 +181,10 @@ yMax = int(math.ceil(float(max(loading1))))
 #finally, we have two numpy arrays that contain the data we need. Make the plot and save it
 #plt.plot(pressures1,loading1,label=dataLabel.rsplit('_',3)[0].replace('_',' ')+' Calculated', linewidth=2.0)
 #plt.plot(pressures1,loading1,label='Calculated', linewidth=3.0, marker='*', markersize=14)
-plt.ylabel('Loading (cc/g STP)', fontsize=10)
+if adsorptionType == 1:
+    plt.ylabel('Excess Loading (cc/g STP)', fontsize=10)
+elif adsorptionType == 2:
+    plt.ylabel('Absolute Loading (cc/g STP)', fontsize=10)
 plt.xlabel('Pressure (mbar)', fontsize=10)
 handles, labels = ax.get_legend_handles_labels()
 labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
@@ -177,8 +192,8 @@ if handle == 1:
     plt.legend(handles, labels, loc=4,prop={'size':10},frameon=False)
 elif handle == 2:
     plt.legend(handles, labels, loc=2,prop={'size':10},frameon=False)
-    plt.subplots_adjust(bottom=0.12)
-plt.axis((0,xMax,-5,30))
+    plt.subplots_adjust(bottom=0.14)
+plt.axis((0,xMax,-5,yMax*1.2))
 #write the plot to a file if desired
 pControl = 0
 while pControl != 1:
