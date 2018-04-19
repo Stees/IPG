@@ -43,20 +43,20 @@ while (adsorptionType != 1 and adsorptionType != 2):
 print('\nPlease wait while I gather all the data. This could take a minute.\n')
 if name == 'jpr54':
     f = open('/ihome/kjohnson/jpr54/trash.txt', "w")
-elif name == 'bmk62':
-    f = open('/ihome/kjohnson/bmk62/trash.txt', "w")
+# elif name == 'bmk62':
+#     f = open('/ihome/kjohnson/bmk62/trash.txt', "w")
 user1Path = '/ihome/kjohnson/jpr54/raspa/isotherms'
 user1gen = subprocess.Popen('find -name "Isotherm" -printf "%h\n"', stdout=subprocess.PIPE, stderr=f, cwd=user1Path, shell=True)
 user1Locs = user1gen.communicate()[0].split()
 user1Locs = [k.split('.',1)[1] for k in user1Locs]
 user1LocsF = [user1Path+'{0}'.format(b) for b in user1Locs]
-user2Path = '/ihome/kjohnson/bmk62'
+#user2Path = '/ihome/kjohnson/bmk62'
 #user2gen = subprocess.Popen('find -name "Isotherm" -printf "%h\n"', stdout=subprocess.PIPE, stderr=f, cwd=user2Path, shell=True)
 f.close()
 if name == 'jpr54':
     subprocess.Popen('rm /ihome/kjohnson/jpr54/trash.txt', shell=True)
-elif name == 'bmk62':
-    subprocess.Popen('rm /ihome/kjohnson/bmk62/trash.txt', shell=True)
+#elif name == 'bmk62':
+#   subprocess.Popen('rm /ihome/kjohnson/bmk62/trash.txt', shell=True)
 #user2Locs = user2gen.communicate()[0].split()
 #user2Locs = [M.split('.',1)[1] for M in user2Locs]
 #user2LocsF = [user2Path+'{0}'.format(N) for N in user2Locs]
@@ -77,6 +77,8 @@ dataSetLabels = np.array([])
 colorArray = np.array([])
 kolor = np.array(['g','m','b','k','c','r','y'])
 markerA = np.array(['o','d','h','s','*','v','p'])
+style = np.array(['-','--','-.',':'])
+styleSelect = -1
 #plot the calculated data
 for count, p in enumerate(calcNumList):
     Dirs = subprocess.Popen('ls -d */', stdout=subprocess.PIPE, cwd=availableIsotherms[p], shell=True)
@@ -94,10 +96,13 @@ for count, p in enumerate(calcNumList):
     loading1 = np.array(loading)
     labelDir = subprocess.Popen('printf "%s" "${PWD##*/}"', stdout=subprocess.PIPE, cwd=availableIsotherms[p], shell=True)
     dataSetLabels = np.append(dataSetLabels,labelDir.communicate()[0])
+    styleSelect = styleSelect + 1
+    if styleSelect == 4:
+        styleSelect = 0
     if (handle == 1):
-        colorHolder, = plt.plot(pressures1, loading1, label=dataSetLabels[count].split('_',1)[0], linewidth=2.0, color=kolor[count])
+        colorHolder, = plt.plot(pressures1, loading1, label=dataSetLabels[count].split('_',1)[0], linewidth=2.0, color=kolor[count], linestyle=style[styleSelect])
     elif (handle == 2):
-        colorHolder, = plt.semilogx(pressures1, loading1, label=dataSetLabels[count].split('_',1)[0], linewidth=2.0, color=kolor[count])
+        colorHolder, = plt.semilogx(pressures1, loading1, label=dataSetLabels[count].split('_',1)[0], linewidth=2.0, color=kolor[count], linestyle=style[styleSelect])
     filename = dataSetLabels[count]
     makeRaw = open("/ihome/kjohnson/jpr54/raspa/isotherms/plotData/{0}".format(filename), 'w')
     makeRaw.write('{0} {1}'.format(pressures1, loading1))
@@ -129,8 +134,10 @@ while (controller != 1):
 markerCount = 0
 if inputRequiredController == 'y':
     for dCount, P in enumerate(litNumList):
-        tempPressArray = np.array([])
-        tempLoadingArray = np.array([])
+        tempPressArrayA = np.array([])
+        tempLoadingArrayA = np.array([])
+        tempPressArrayD = np.array([])
+        tempLoadingArrayD = np.array([])
         #dataSetLabels = np.append(dataSetLabels, litDataLines[int(P)])
         fileName = '/ihome/kjohnson/jpr54/raspa/isotherms/literatureData/' + litDataLines[int(P)]
     #read in the data
@@ -142,14 +149,24 @@ if inputRequiredController == 'y':
         #match the colors
         testLabel = litDataLines[int(P)].split('_',1)[0] + '_' + litDataLines[int(P)].split('_',2)[1] + '_' + litDataLines[int(P)].split('_',3)[2]
         colorSuccess = 0
+        adSelector = 0
         for kCounter, nameString in enumerate(dataSetLabels[:]):
             if (testLabel in nameString):
                 colorMatch = colorArray[kCounter]
                 colorSuccess = 1
             for jCount, line in enumerate(tempLines):
                 if (jCount > 0):
-                    tempPressArray = np.append(tempPressArray, line.split()[0])
-                    tempLoadingArray = np.append(tempLoadingArray, line.split()[1])
+                    #add the data to the adsorption and desorption arrays
+                    if "adsorption" in line:
+                        adSelector = 1
+                    elif "desorption" in line:
+                        adSelector = 2
+                    elif adSelector == 1:
+                        tempPressArrayA = np.append(tempPressArrayA, line.split()[0])
+                        tempLoadingArrayA = np.append(tempLoadingArrayA, line.split()[1])
+                    elif adSelector == 2:
+                        tempPressArrayD = np.append(tempPressArrayD, line.split()[0])
+                        tempLoadingArrayD = np.append(tempLoadingArrayD, line.split()[1])
                     legendSelection = 0
                     # while (legendSelection != 1):
                     #print('What information do you need to include in the legend? Calculation/literature is added automatically.\n')
@@ -160,17 +177,21 @@ if inputRequiredController == 'y':
             markerCount = 0
         if (colorSuccess == 1):
             if (handle == 1):
-                plt.plot(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=8, linestyle='none', color=colorMatch)
+                plt.plot(tempPressArrayA, tempLoadingArrayA, label=tempLine.split('_',1)[0]+" Experiment, A", marker=markerA[markerCount], markersize=4, linestyle='none', color=colorMatch)
+                plt.plot(tempPressArrayD, tempLoadingArrayD, label=tempLine.split('_',1)[0]+" Experiment, D", marker=markerA[markerCount], markersize=4, linestyle='none', color=colorMatch, markerfacecolor='w')
                 markerCount = markerCount + 1
             elif (handle == 2):
-                plt.semilogx(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=8, linestyle='none', color=colorMatch)
+                plt.semilogx(tempPressArrayA, tempLoadingArrayA, label=tempLine.split('_',1)[0]+" Experiment, A", marker=markerA[markerCount], markersize=4, linestyle='none', color=colorMatch)
+                plt.semilogx(tempPressArrayD, tempLoadingArrayD, label=tempLine.split('_',1)[0]+" Experiment, D", marker=markerA[markerCount], markersize=4, linestyle='none', color=colorMatch, markerfacecolor='w')
                 markerCount = markerCount + 1
         elif (colorSuccess == 0):
             if (handle == 1):
-                plt.plot(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=8, linestyle='none')
+                plt.plot(tempPressArrayA, tempLoadingArrayA, label=tempLine.split('_',1)[0]+" Experiment, A", marker=markerA[markerCount], markersize=4, linestyle='none')
+                plt.plot(tempPressArrayD, tempLoadingArrayD, label=tempLine.split('_',1)[0]+" Experiment, D", marker=markerA[markerCount], markersize=4, linestyle='none', markerfacecolor='w')
                 markerCount = markerCount + 1
             elif (handle == 2):
-                plt.semilogx(tempPressArray, tempLoadingArray, label=tempLine.split('_',1)[0]+" Experiment", marker=markerA[markerCount], markersize=8, linestyle='none')
+                plt.semilogx(tempPressArrayA, tempLoadingArrayA, label=tempLine.split('_',1)[0]+" Experiment, A", marker=markerA[markerCount], markersize=4, linestyle='none')
+                plt.semilogx(tempPressArrayD, tempLoadingArrayD, label=tempLine.split('_',1)[0]+" Experiment, D", marker=markerA[markerCount], markersize=4, linestyle='none', markerfacecolor='w')
                 markerCount = markerCount + 1
 #determine upper axis limits
 xMax = int(math.ceil(float(max(pressures1))))
@@ -191,9 +212,9 @@ labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
 if handle == 1:
     plt.legend(handles, labels, loc=4,prop={'size':10},frameon=False)
 elif handle == 2:
-    plt.legend(handles, labels, loc=2,prop={'size':10},frameon=False)
-    plt.subplots_adjust(bottom=0.14)
-plt.axis((0,xMax,-5,yMax*1.2))
+    plt.legend(handles, labels, loc=2,prop={'size':8},frameon=False)
+plt.subplots_adjust(bottom=0.16)
+plt.axis((0.0001,800,-5,yMax*1.2))
 #write the plot to a file if desired
 pControl = 0
 while pControl != 1:
