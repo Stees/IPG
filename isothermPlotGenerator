@@ -65,7 +65,7 @@ availableIsotherms = user1LocsF #+ user2LocsF
 aControl = 0
 print('Available isotherms for plotting:\n')
 for j, line in enumerate(availableIsotherms):
-    print('{0}: {1}'.format(j + 1,line))
+    print('{0}: {1}'.format(j + 1,line.split('isotherms',1)[1]))
 while aControl == 0:
     print('\nEnter the numbers corresponding to the calculations you would like to plot, separated by spaces.\n')
     calcNumbers = raw_input('For example: 0 1\n')
@@ -227,7 +227,7 @@ plt.subplots_adjust(bottom=0.16)
 #write the plot to a file if desired
 pControl = 0
 while pControl != 1:
-    savePlot = raw_input('\nsave the plot? y/n\n')
+    savePlot = raw_input('\nDo you want to save the plot? (y/n)\n')
     if (savePlot == 'y'):
         plotTitle = raw_input('\nEnter a name for the plot.\n')
         plt.savefig("/ihome/kjohnson/jpr54/raspa/isotherms/plots/{0}".format(plotTitle), dpi = 600)
