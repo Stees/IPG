@@ -12,6 +12,16 @@ import subprocess
 readline.parse_and_bind("tab: complete")
 readline.set_completer_delims(readline.get_completer_delims().replace('-',''))
 
+#standard variables
+isothermType = np.array(['excess', 'absolute'])
+unitArray = np.array(['molecules/unit cell', 'mol/kg framework', 'milligram/gram framework', 'cm^3 (STP)/gr framework', 'cm^3 (STP)/cm^3 framework'])
+unitPositionArray = np.array([5,5,5,6,6])
+dataSetLabels = np.array([])
+colorArray = np.array([])
+kolor = np.array(['g','m','b','k','c','r','y'])
+markerA = np.array(['o','d','h','s','*','v','p'])
+style = np.array(['-','--','-.',':'])
+
 #determine who the user is
 user = subprocess.Popen(r'whoami', stdout=subprocess.PIPE)
 name = str(user.communicate()[0].split()).replace("['","").replace("']","")
@@ -43,23 +53,14 @@ while (adsorptionType != 1 and adsorptionType != 2):
 print('\nPlease wait while I gather all the data. This could take a minute.\n')
 if name == 'jpr54':
     f = open('/ihome/kjohnson/jpr54/trash.txt', "w")
-# elif name == 'bmk62':
-#     f = open('/ihome/kjohnson/bmk62/trash.txt', "w")
 user1Path = '/ihome/kjohnson/jpr54/raspa/isotherms'
 user1gen = subprocess.Popen('find -name "Isotherm" -printf "%h\n"', stdout=subprocess.PIPE, stderr=f, cwd=user1Path, shell=True)
 user1Locs = user1gen.communicate()[0].split()
 user1Locs = [k.split('.',1)[1] for k in user1Locs]
 user1LocsF = [user1Path+'{0}'.format(b) for b in user1Locs]
-#user2Path = '/ihome/kjohnson/bmk62'
-#user2gen = subprocess.Popen('find -name "Isotherm" -printf "%h\n"', stdout=subprocess.PIPE, stderr=f, cwd=user2Path, shell=True)
 f.close()
 if name == 'jpr54':
     subprocess.Popen('rm /ihome/kjohnson/jpr54/trash.txt', shell=True)
-#elif name == 'bmk62':
-#   subprocess.Popen('rm /ihome/kjohnson/bmk62/trash.txt', shell=True)
-#user2Locs = user2gen.communicate()[0].split()
-#user2Locs = [M.split('.',1)[1] for M in user2Locs]
-#user2LocsF = [user2Path+'{0}'.format(N) for N in user2Locs]
 availableIsotherms = user1LocsF #+ user2LocsF
 aControl = 0
 print('Available isotherms for plotting:\n')
@@ -69,18 +70,23 @@ while aControl == 0:
     print('\nEnter the numbers corresponding to the calculations you would like to plot, separated by spaces.\n')
     calcNumbers = raw_input('For example: 0 1\n')
     calcNumList = np.unique(np.array([int(s) for s in calcNumbers.split() if s.isdigit()]))
-    
     if calcNumList.any():
         aControl = 1
     else:
         print('\nPlease try again.\n')
 calcNumList[:] = [x - 1 for x in calcNumList]
-dataSetLabels = np.array([])
-colorArray = np.array([])
-kolor = np.array(['g','m','b','k','c','r','y'])
-markerA = np.array(['o','d','h','s','*','v','p'])
-style = np.array(['-','--','-.',':'])
 styleSelect = -1
+
+#determine desired units
+print('\nThe available units are:\n1: molecules/unit cell\n2: mol/kg framework\n3: milligram/gram framework\n4: cm^3 (STP)/gram framework\n5: cm^3 (STP)/cm^3 framework\n')
+unitControl = 0
+while unitControl == 0:
+    unitSelection = raw_input('\nEnter the number corresponding to the desired unit.\n')
+    if unitSelection == '1' or unitSelection == '2' or unitSelection == '3' or unitSelection == '4' or unitSelection == '5':
+        unitControl = int(unitSelection)
+    else:
+        print('\nInvalid input. Try again.\n')
+
 #plot the calculated data
 for count, p in enumerate(calcNumList):
     Dirs = subprocess.Popen('ls -d */', stdout=subprocess.PIPE, cwd=availableIsotherms[p], shell=True)
@@ -89,12 +95,8 @@ for count, p in enumerate(calcNumList):
     loading = []
     for pressure in pressures1:
         loc = availableIsotherms[p]+'/'+'{0}mbar/Output/System_0/'.format(str(pressure))
-        if adsorptionType == 1:
-            getData = subprocess.Popen('grep -F "Average loading excess [cm^3 (STP)/g" output_*', stdout=subprocess.PIPE, cwd=loc, shell=True)
-        elif adsorptionType == 2:
-            getData = subprocess.Popen('grep -F "Average loading absolute [cm^3 (STP)/g" output_*', stdout=subprocess.PIPE, cwd=loc, shell=True)
-        #temporary lines
-        loading.append(float(getData.communicate()[0].split()[6]))
+        getData = subprocess.Popen('grep -F "Average loading {0} [{1}" output_*'.format(isothermType[adsorptionType-1],unitArray[unitControl-1]), stdout=subprocess.PIPE, cwd=loc, shell=True)
+        loading.append(float(getData.communicate()[0].split()[unitPositionArray[unitControl-1]]))
     loading1 = np.array(loading)
     labelDir = subprocess.Popen('printf "%s" "${PWD##*/}"', stdout=subprocess.PIPE, cwd=availableIsotherms[p], shell=True)
     dataSetLabels = np.append(dataSetLabels,labelDir.communicate()[0])
@@ -102,12 +104,16 @@ for count, p in enumerate(calcNumList):
     if styleSelect == 4:
         styleSelect = 0
     if (handle == 1):
-        colorHolder, = plt.plot(pressures1, loading1, label=dataSetLabels[count].split('_',1)[1], linewidth=2.0, color=kolor[count], linestyle=style[styleSelect])
+        colorHolder, = plt.plot(pressures1, loading1, label=dataSetLabels[count].split('_')[0], linewidth=2.0, color=kolor[count], linestyle=style[styleSelect])
     elif (handle == 2):
-        colorHolder, = plt.semilogx(pressures1, loading1, label=dataSetLabels[count].split('_',1)[1], linewidth=2.0, color=kolor[count], linestyle=style[styleSelect])
+        colorHolder, = plt.semilogx(pressures1, loading1, label=dataSetLabels[count].split('_')[0], linewidth=2.0, color=kolor[count], linestyle=style[styleSelect])
     filename = dataSetLabels[count]
+    #print the raw data sets
+    #need to modify to make sure nothing gets overwritten when different units are used
     makeRaw = open("/ihome/kjohnson/jpr54/raspa/isotherms/plotData/{0}".format(filename), 'w')
-    makeRaw.write('{0} {1}'.format(pressures1, loading1))
+    makeRaw.write('mbar\t{0}\n'.format(unitArray[unitControl-1]))
+    for k in range(0,len(pressures1)):
+        makeRaw.write('{0}\t{1}\n'.format(pressures1[k], loading1[k]))
     makeRaw.close()
     colorArray = np.append(colorArray, colorHolder.get_color()) 
 #determine if a literature data set needs to be plotted
@@ -130,7 +136,7 @@ while (controller != 1):
         litNumList = np.unique(np.array([int(s) for s in litNumbers.split() if s.isdigit()]))
     else:
         time.sleep(2)
-        print('\n\n\nInvalid entry, please try again.\n')
+        print('\n\nInvalid entry. Please try again.\n')
         time.sleep(1)
 #bring in the desired literature data
 markerCount = 0
@@ -204,19 +210,20 @@ yMax = int(math.ceil(float(max(loading1))))
 #finally, we have two numpy arrays that contain the data we need. Make the plot and save it
 #plt.plot(pressures1,loading1,label=dataLabel.rsplit('_',3)[0].replace('_',' ')+' Calculated', linewidth=2.0)
 #plt.plot(pressures1,loading1,label='Calculated', linewidth=3.0, marker='*', markersize=14)
-if adsorptionType == 1:
-    plt.ylabel('Excess Loading (cc/g STP)', fontsize=10)
-elif adsorptionType == 2:
-    plt.ylabel('Absolute Loading (cc/g STP)', fontsize=10)
+plt.ylabel('{0} Loading ({1})'.format(isothermType[adsorptionType-1].capitalize(),unitArray[unitControl-1]), fontsize=10)
 plt.xlabel('Pressure (mbar)', fontsize=10)
 handles, labels = ax.get_legend_handles_labels()
 labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
 if handle == 1:
-    plt.legend(handles, labels, loc=2,prop={'size':8},frameon=False)
-elif handle == 2:
     plt.legend(handles, labels, loc=2,prop={'size':7},frameon=False)
+elif handle == 2:
+    plt.legend(handles, labels, loc=2,prop={'size':10},frameon=False)
 plt.subplots_adjust(bottom=0.16)
-plt.axis((1,10000,-5,yMax*1.2))
+
+#plt.axis((100,10000,1,2))
+#uncomment following line when doing normal operation
+#plt.axis((0.00001,.5,0,yMax*1.2))
+
 #write the plot to a file if desired
 pControl = 0
 while pControl != 1:
@@ -228,5 +235,5 @@ while pControl != 1:
     elif (savePlot == 'n'):
         pControl = 1
     else:
-        print('try again\n')
+        print('Try again.\n')
 plt.show()
