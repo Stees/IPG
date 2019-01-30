@@ -163,7 +163,8 @@ if inputRequiredController == 'y':
                 colorMatch = colorArray[kCounter]
                 colorSuccess = 1
             for jCount, line in enumerate(tempLines):
-                if (jCount > 0):
+                #first two lines are the name and the units
+                if (jCount > 1):
                     #add the data to the adsorption and desorption arrays
                     if "adsorption" in line:
                         adSelector = 1
@@ -183,23 +184,31 @@ if inputRequiredController == 'y':
             #dataSetLabels = np.append(dataSetLabels, tempLine)
         if markerCount > 6:
             markerCount = 0
+        if len(tempLoadingArrayD) != 0:
+            experimentString = " Experiment, A"
+        else:
+            experimentString = " Experiment"
         if (colorSuccess == 1):
             if (handle == 1):
-                plt.plot(tempPressArrayA, tempLoadingArrayA, label=tempLine.split('_',1)[0]+" Experiment, A", marker=markerA[markerCount], markersize=4, linestyle='none', color=colorMatch)
-                plt.plot(tempPressArrayD, tempLoadingArrayD, label=tempLine.split('_',1)[0]+" Experiment, D", marker=markerA[markerCount], markersize=4, linestyle='none', color=colorMatch, markerfacecolor='w')
+                plt.plot(tempPressArrayA, tempLoadingArrayA, label=tempLine.split('_',1)[0]+experimentString, marker=markerA[markerCount], markersize=4, linestyle='none', color=colorMatch)
+                if len(tempLoadingArrayD) != 0:
+                    plt.plot(tempPressArrayD, tempLoadingArrayD, label=tempLine.split('_',1)[0]+" Experiment, D", marker=markerA[markerCount], markersize=4, linestyle='none', color=colorMatch, markerfacecolor='w')
                 markerCount = markerCount + 1
             elif (handle == 2):
-                plt.semilogx(tempPressArrayA, tempLoadingArrayA, label=tempLine.split('_',1)[0]+" Experiment, A", marker=markerA[markerCount], markersize=4, linestyle='none', color=colorMatch)
-                plt.semilogx(tempPressArrayD, tempLoadingArrayD, label=tempLine.split('_',1)[0]+" Experiment, D", marker=markerA[markerCount], markersize=4, linestyle='none', color=colorMatch, markerfacecolor='w')
+                plt.semilogx(tempPressArrayA, tempLoadingArrayA, label=tempLine.split('_',1)[0]+experimentString, marker=markerA[markerCount], markersize=4, linestyle='none', color=colorMatch)
+                if len(tempLoadingArrayD) != 0:
+                    plt.semilogx(tempPressArrayD, tempLoadingArrayD, label=tempLine.split('_',1)[0]+" Experiment, D", marker=markerA[markerCount], markersize=4, linestyle='none', color=colorMatch, markerfacecolor='w')
                 markerCount = markerCount + 1
         elif (colorSuccess == 0):
             if (handle == 1):
-                plt.plot(tempPressArrayA, tempLoadingArrayA, label=tempLine.split('_',1)[0]+" Experiment, A", marker=markerA[markerCount], markersize=4, linestyle='none')
-                plt.plot(tempPressArrayD, tempLoadingArrayD, label=tempLine.split('_',1)[0]+" Experiment, D", marker=markerA[markerCount], markersize=4, linestyle='none', markerfacecolor='w')
+                plt.plot(tempPressArrayA, tempLoadingArrayA, label=tempLine.split('_',1)[0]+experimentString, marker=markerA[markerCount], markersize=4, linestyle='none')
+                if len(tempLoadingArrayD) != 0:
+                    plt.plot(tempPressArrayD, tempLoadingArrayD, label=tempLine.split('_',1)[0]+" Experiment, D", marker=markerA[markerCount], markersize=4, linestyle='none', markerfacecolor='w')
                 markerCount = markerCount + 1
             elif (handle == 2):
-                plt.semilogx(tempPressArrayA, tempLoadingArrayA, label=tempLine.split('_',1)[0]+" Experiment, A", marker=markerA[markerCount], markersize=4, linestyle='none')
-                plt.semilogx(tempPressArrayD, tempLoadingArrayD, label=tempLine.split('_',1)[0]+" Experiment, D", marker=markerA[markerCount], markersize=4, linestyle='none', markerfacecolor='w')
+                plt.semilogx(tempPressArrayA, tempLoadingArrayA, label=tempLine.split('_',1)[0]+experimentString, marker=markerA[markerCount], markersize=4, linestyle='none')
+                if len(tempLoadingArrayD) != 0:
+                    plt.semilogx(tempPressArrayD, tempLoadingArrayD, label=tempLine.split('_',1)[0]+" Experiment, D", marker=markerA[markerCount], markersize=4, linestyle='none', markerfacecolor='w')
                 markerCount = markerCount + 1
 #determine upper axis limits
 xMax = int(math.ceil(float(max(pressures1))))
@@ -220,7 +229,7 @@ elif handle == 2:
     plt.legend(handles, labels, loc=2,prop={'size':10},frameon=False)
 plt.subplots_adjust(bottom=0.16)
 
-#plt.axis((100,10000,1,2))
+plt.axis((0.1,10000,0,60))
 #uncomment following line when doing normal operation
 #plt.axis((0.00001,.5,0,yMax*1.2))
 
